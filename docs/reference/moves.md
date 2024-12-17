@@ -1,0 +1,243 @@
+# Move API
+
+## Create Move Action
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"creator": "xxx", "type": "standard" ...}' \
+  http://192.168.25.25:8090/chassis/moves
+```
+
+**Returns**
+
+```json
+{
+  "id": 5 // The Id of the newly created action
+}
+```
+
+**Request Parameters**
+
+```ts
+interface MoveActionCreate {
+  creator: string; // Initiator of the action. For diagnosis only.
+  type:
+    | 'standard'
+    | 'charge' // to to charger and docker with it
+    | 'return_to_elevator_waiting_point'
+    | 'enter_elevator'
+    | 'leave_elevator' // Deprecated. Don't use it anymore.
+    | 'along_given_route' // Follow a given path.
+    | 'align_with_rack' // crawl under a rack(to jack it up later)
+    | 'to_unload_point' // move to a rack unload point(to jack it down later)
+    | 'follow_target'; // follow a moving target
+  target_x?: number;
+  target_y?: number;
+  target_z?: number;
+  target_ori?: number;
+  target_accuracy?: number; // in meters. optional.
+
+  // A path to follow.
+  //
+  // Only valid with type `along_given_route`.
+  // It's a list of coordinates, as comma separated string,
+  // in the format of "x1, y1, x2, y2"
+  route_coordinates?: string;
+
+  // Allowed detour distance when go around an obstacle,
+  // while following a given path.
+  //
+  // Only valid with type `along_given_route`.
+  // When 0 is given, it will always stop and wait before an obstacle,
+  // instead of trying to go around it.
+  detour_tolerance?: number;
+
+  // if true, action will succeed right away
+  // when within radius of `target_accuracy`
+  use_target_zone?: boolean = false;
+
+  charge_retry_count?: number; // retry times before `charge` action fails.
+
+  properties: { // Optional: since 2.11.0
+    inplace_rotate: boolean; // Optional. since 2.11.0 strictly rotate without any linear velocity.
+  }
+}
+```
+
+### Jack Device
+
+Since 2.7.0, there is a new model(codename **Longjack**), it can crawl under a rack and jack it up.
+
+The steps are summaries as follow:
+
+1. Create a move action, with `type=align_with_rack` to crawl under the rack.
+2. When the move succeeded, call `/services/jack_up`.
+3. The progress of the jack device is reported from [Jack State Topic](../reference/websocket.md#jack-state).
+4. When the jack is fully up, the footprint of the robot will expand to accommodate that of the rack.
+   The updated footprint can be received from [Robot Model Topic](../reference/websocket.md#robot-model).
+5. When the jack is fully up, use `type=to_unload_point` to move to the unload point.
+6. Call `/services/jack_down` to unload.
+
+| Robot Admin Screenshot  | Photo                |
+| ----------------------- | -------------------- |
+| ![](./jack_monitor.png) | ![](./jack_real.jpg) |
+
+:::warning
+Some parameters must be configured correctly for safe using:
+
+- `/rack_detector/rack_width|rack_depth` - The size of the rack.
+- `/rack_detector/margin` - Some racks have extruded parts outside of rectangle formed by the legs.
+- `/jack/extra_leg_offset` - Some racks have inward extruded legs that can't be seen by lidar.
+- `/jack/cargo_to_jack_front_edge_min_distance` - When mounted, the distance between the front edge of the rack to the front edge of the jack panel.
+
+:::
+
+![](./rack_params1.png)
+
+![](./rack_params2.png)
+
+### Follow Given Route Strictly
+
+When `route_coordinates` is given and `detour_tolerance=0`, the robot will follow the route as closely as possible and will not try to evade obstacles(only stop ahead).
+
+This is often used in stock inspection.
+
+![](./follow_given_route.png)
+
+### Follow Target
+
+This action is used to tell the robot to follow a moving target.
+
+```
+curl -X POST
+  -H "content-type: application/json" \
+  --data '{"type":"follow_target"}' \
+  http://192.168.25.25:8090/chassis/moves
+```
+
+When this action is created, the user should then send target poses with websocket topic `/follow_target_state`: See [Follow Target](../reference/websocket.md#follow-target-state)
+
+## Get Move Action Detail
+
+```bash
+curl http://192.168.25.25:8090/chassis/moves/4409
+```
+
+```json
+{
+  "id": 4409,
+  "creator": "robot-admin-web",
+  "state": "cancelled",
+  "type": "standard",
+  "target_x": 0.7310126134385344,
+  "target_y": -1.5250144001960249,
+  "target_z": 0.0,
+  "target_ori": null,
+  "target_accuracy": null,
+  "use_target_zone": null,
+  "is_charging": null,
+  "charge_retry_count": 0,
+  "fail_reason": 0,
+  "fail_reason_str": "None - None",
+  "fail_message": "",
+  "create_time": 1647509573,
+  "last_modified_time": 1647509573
+}
+```
+
+**Response Explained**
+
+```ts
+interface MoveAction extends MoveActionCreate {
+  state: 'idle' | 'moving' | 'succeeded' | 'failed' | 'cancelled';
+  create_time: number; // unix timestamp, like 1647509573
+  last_modified_time: number; // unix timestamp, like 1647509573
+  fail_reason: number; // fail code. Only valid when state="failed"
+  // internal fail messge - for debugging. Only valid when state="failed"
+  fail_reason_str: string;
+  // internal fail message in Chinese
+  // for debugging，Only valid when state="failed"
+  fail_message: string;
+}
+```
+
+## Move Action List
+
+The history of all move actions
+
+```bash
+curl http://192.168.25.25:8090/chassis/moves
+```
+
+```json
+[
+  {
+    "id": 4409,
+    "creator": "robot-admin-web",
+    "state": "cancelled",
+    "type": "standard",
+    "fail_reason": 0,
+    "fail_reason_str": "None - None",
+    "fail_message": "",
+    "create_time": 1647509573,
+    "last_modified_time": 1647509573
+  },
+  {
+    "id": 4408,
+    "creator": "control_unit",
+    "state": "succeeded",
+    "type": "none",
+    "fail_reason": 0,
+    "fail_reason_str": "None - None",
+    "fail_message": "",
+    "create_time": 1647427995,
+    "last_modified_time": 1647428509
+  }
+]
+```
+
+## Move State Feedback
+
+Use websocket `/planning_state` to get updated of move state.
+
+```json
+{
+  "topic": "/planning_state",
+  "move_state": "moving",
+  "target_poses": [
+    {
+      "pos": [2.3, 20.82],
+      "ori": 0
+    }
+  ],
+  "charger_pose": {
+    "pos": [0, 0],
+    "ori": 0
+  },
+  "going_back_to_charger": false,
+  "action_id": 4410, // The current executing(or last) move action ID.
+  "fail_reason": 0,
+  "fail_reason_str": "none",
+  "remaining_distance": 3.546117067337036,
+  "move_intent": "none",
+  "intent_target_pose": {
+    "pos": [0, 0],
+    "ori": 0
+  },
+  "stuck_state": "none"
+}
+```
+
+## Cancel Current Move Action
+
+```bash
+curl -X PATCH \
+  -H "Content-Type: application/json" \
+  -d '{state: "cancelled"}' \
+  http://192.168.25.25:8090/chassis/moves/current
+```
+
+```json
+{ "state": "cancelled" }
+```
