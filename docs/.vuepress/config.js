@@ -10,6 +10,7 @@ module.exports = {
         locales: {
             "/": {
                 nav: [
+                    // { text: '底盘JIRA', link: 'https://autoxing.atlassian.net/browse/RCSS' }
                 ],
                 // sidebar: [
                 //     '/overview/overview',
@@ -53,6 +54,14 @@ module.exports = {
                             '/reference/hostnames',
                             '/reference/landmarks',
                             '/reference/websocket'
+                        ],
+                        sidebarDepth: 2
+                    },
+                    {
+                        title: 'Articles',
+                        collapsable: false,
+                        children: [
+                            '/articles/piece_by_piece_mapping',
                         ],
                         sidebarDepth: 2
                     },
