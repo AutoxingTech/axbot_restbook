@@ -91,6 +91,17 @@ The **dark-red** pixels are the entity of the obstacles, while the **light-red**
 
   "reliable": true,       // false means the position is lost
 
+  // "lidar_reliable = False" means that no constraint exists between newly created 
+  // observations(submaps) and the current static map.
+  // 
+  // The position loss steps are as follow:
+  // 1. No constraints(between new observations and static map) exists, "lidar_reliable" will become false.
+  // 2. The robot enters pure dead-reckoning mode. And "position_loss_progress" will start to increase.
+  // 3. After some movements if new constraints are created, "lidar_reliable" will become true.
+  //    But if "position_loss_progress" reaches 1.0, "reliable" will also become false.
+  "lidar_reliable": false, // since 2.11.0-rc18
+  "position_loss_progress": 0.35  // since 2.11.0-rc18. Only exists when lidar_reliable = false
+
   // The quality of positioning(Experimental)
   //
   // Only valid in positioning state.
@@ -186,6 +197,10 @@ Since 2.11.0
   "percentage": 0.64, // 电量
   "power_supply_status": "discharging", // charging/discharing/full
   "cell_voltages": [4.141, 4.138, 4.139, 4.133, 4.136, 4.138, 4.138],
+  "capacity": 14.0, // Ah
+  "design_capacity": 15.0, // Ah
+  "state_of_health": 0.93, // percentage
+  "cycle_count": 80,
 }
 ```
 
@@ -285,7 +300,10 @@ enum StuckState {
 
 ![](./pointcloud.png)
 
-The point cloud in world frame.
+### Point Cloud Used for SLAM
+
+The combined point cloud from one or multiple lidar(if any) used for SLAM.
+The coordinates are in world frame.
 
 ```json
 {
@@ -297,6 +315,49 @@ The point cloud in world frame.
     [7.79, 4.14, 0.04]
     ...
   ]
+}
+```
+
+### Point Cloud for Individual Lidar Device
+
+Since 2.12.0
+
+This topic is used to debug individual lidar device.
+The coordinates are in world frame.
+
+Commonly used topic names are:
+
+```
+/horizontal_laser_2d/matched
+/left_laser_2d/matched
+/right_laser_2d/matched
+/lt_laser_2d/matched (left top)
+/rb_laser_2d/matched (right back)
+```
+
+```json
+{
+    "topic": "/horizontal_laser_2d/matched",
+    "stamp": 1741764468.939,
+    "fields": [
+        {
+            "name": "x",
+            "data_type": "f32"
+        },
+        {
+            "name": "y",
+            "data_type": "f32"
+        },
+        {
+            "name": "z",
+            "data_type": "f32"
+        },
+        {
+            "name": "intensity",
+            "data_type": "f32"
+        }
+    ],
+    "data": "QphAQHPLmkHDpvk/xcTEPk+RQED22ppBp6..." // base64 encoded binary data
 }
 ```
 
@@ -1097,5 +1158,72 @@ Selected update of output pins:
   "topic": "/modify_output_pins",
   "enable": [0, 9, 13],
   "disable": [2, 4, 6],
+}
+```
+
+## Push Handle State
+
+```json
+{
+  "topic": "/push_handle_state",
+  "mode": "idle", // idle, push, drive
+  "left_activated": false,
+  "right_activated": false,
+  "calibrating": true, // Optional. Only present when true
+}
+```
+
+## Detected Trailer
+
+![](./trailer.png)
+
+```json
+{
+    "topic": "/detected_trailer",
+    "detected": true,
+    "hitch_position": [0, -0.35], // relative to the pose of the robot
+    "hitch_arm_length": 0.4,  // the length of the hitch arm
+    "width": 0.5, // width of the trailer
+    "depth": 1.0, // depth(length) of the trailer
+    "pose": {  // pose of the trailer, relative to the robot
+        "pos": [0.31, -0.85],
+        "ori": 0.13
+    }
+}
+```
+
+## Depth Camera Images
+
+Since 2.12.0
+
+![](./depth_image_rainbow.png)
+
+```json
+{
+    "topic": "/depth_camera/downward/image",
+    "size": [160, 100],
+    "data": "iVBORw0KGgoAAAANSUhEUgAAALYAAAA7BAAAAA..." // Base64 encoded PNG file
+}
+```
+
+Commonly used topic names are:
+
+```
+/depth_camera/downward/image
+/depth_camera/upward/image
+/depth_camera/forward/image
+```
+
+## Updated Map Slice
+
+```json
+{
+    "topic": "/updated_map_slice",
+    "width": 298,
+    "height": 356,
+    "resolution": 0.05,
+    "origin_x": -4.4,
+    "origin_y": -9.0,
+    "data": "iVBORw0KGgoAAAANSUhEUg..." // base64 encoded greyscale PNG
 }
 ```

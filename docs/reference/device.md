@@ -360,3 +360,40 @@ Disable NTP Server
 ```
 curl -X DELETE http://192.168.25.25:8090/device/chrony/allows
 ```
+
+## Sensor List
+
+Since 2.12.0
+
+Return all sensors and their main topics, for human inspection in quality control process.
+
+```
+curl http://192.168.25.25:8090/device/sensors
+```
+
+```json
+{
+    "depth_cameras": [
+        {
+            "name": "ihawk_upward",
+            "depth_image_topic": "/depth_camera/downward/image"
+        },
+        {
+            "name": "ihawk_downward",
+            "depth_image_topic": "/depth_camera/backward/image"
+        }
+    ],
+    "laser_scanners": [
+        {
+            "name": "lidar_node",
+            "scan_topic": "/horizontal_laser_2d/matched"
+        }
+    ],
+    "rgb_cameras": [
+        {
+            "name": "rgb_forward",
+            "image_topic": "/rgb_cameras/front/compressed"
+        }
+    ]
+}
+```

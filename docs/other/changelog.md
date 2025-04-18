@@ -1,7 +1,19 @@
 # Changelog
 
+## 2.12.0 (Unreleased)
+
+- Add websocket channel [Updated Map Slice](../reference/websocket.md#updated-map-slice)
+- Add `/services/query_pose` [Query Pose](../reference/services.md#query-pose)
+- Add `/device/sensors` [Sensors List](../reference/device.md#sensor-list), for quality control process.
+- Add `/xxxx_laser_2d/matched` [point cloud for individual lidar device](../reference/websocket.md#point-cloud-for-individual-lidar-device).
+- Add `/depth_camera/xxx/image` [depth camera images](../reference/websocket.md#depth-camera-images)
+
 ## 2.11.0 (Unreleased)
 
+- Add service [clear_fall_risk_warning](../reference/services.md#clear-fall-risk-warning).
+- Add `capacity`, `design_capacity`, `state_of_health` and `cycle_count` in [detailed_battery_state](../reference/websocket.md#detailed-battery-state).
+- Add websocket topic [Detected Trailer](../reference/websocket.md#detected-trailer)
+- Add websocket topic [Push Handle State](../reference/websocket.md#push-handle-state)
 - Add websocket topic [Detailed Battery State](../reference/websocket.md#detailed-battery-state)
 - Add [Clear Jack Errors](../reference/services.md#clear-jack-errors)
 - Add [landmarks](../reference/landmarks.md)

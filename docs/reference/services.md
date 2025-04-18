@@ -589,3 +589,32 @@ curl http://192.168.25.25:8090/collected_data
 ```
 
 The collected data serves as raw materials. The developer must insert landmarks into [overlays](./overlays.md#landmarks) for them to work.
+
+## Clear Fall Risk Warning
+
+```bash
+curl -X POST http://192.168.25.25:8090/services/clear_fall_risk_warning
+```
+
+## Query Pose
+
+This API helps collect the poses of various points of interest (POIs). 
+
+For example, when the robot docks on a charger, it calculates the charger’s pose 
+based on the robot’s position. 
+Similarly, if a forklift is parked in a cargo location, the system infers that
+cargo location’s pose from the forklift’s position.
+
+```bash
+curl http://192.168.25.25:8090/services/query_pose/charger_pose
+curl http://192.168.25.25:8090/services/query_pose/pallet_pose
+```
+
+```json
+{
+    "pose": {
+        "pos": [4.179, -26.094],
+        "ori": 3.18,
+    }
+}
+```
