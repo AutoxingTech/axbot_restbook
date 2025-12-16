@@ -372,9 +372,9 @@ Current global path.
   "topic": "/path",
   "stamp": 1653301966860,
   "positions": [
-    [0.94, 0.27],
-    [0.94, 0.25],
-    [0.96, 0.25]
+    [0.94, 0.27, 0.01], // the heading(3rd member) is added since 2.12.0
+    [0.94, 0.25, 0.01],
+    [0.96, 0.25, 0.01]
   ]
 }
 ```
@@ -562,6 +562,14 @@ This topic is used to know the dynamic footprint of the robot.
     [-0.203, -0.228],
     [-0.13, -0.25]
   ],
+  // since 2.12.4 The expanded_footprint adds more safe zone around the robot
+  "expanded_footprint": [
+    [-0.245, -0.077],
+    [-0.235, -0.178],
+    [-0.203, -0.228],
+    [-0.13, -0.25]
+    "..."
+  ]
   "width": 0.496
 }
 ```
@@ -1225,5 +1233,19 @@ Commonly used topic names are:
     "origin_x": -4.4,
     "origin_y": -9.0,
     "data": "iVBORw0KGgoAAAANSUhEUg..." // base64 encoded greyscale PNG
+}
+```
+
+## Raw Io-board State
+
+![](./raw_io_board_state.png)
+
+The current state of input & output of the IoBoard.
+
+```json
+rtn = {
+    "topic": "/raw_io_board_state",
+    "inputs_active": [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1],
+    "outputs_active": [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1],
 }
 ```
