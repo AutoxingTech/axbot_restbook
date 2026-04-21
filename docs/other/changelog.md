@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.14.0
+
+- Add `/services/query_pose/trailer_pose` [Query Pose](../reference/services.md#query-pose)
+
 ## 2.12.0
 
 - Add websocket channel [V2X Health State](../reference/websocket.md#v2x-health-state)
